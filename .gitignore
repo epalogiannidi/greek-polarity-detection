@@ -1,0 +1,15 @@
+
+.venv/
+myenv/*
+
+dist/*
+.mypy_cache/*
+.idea
+
+logs/*
+.DS_Store
+*/__pycache__
+__pycache__/
+*.pyc
+
+*.bat
