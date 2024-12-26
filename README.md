@@ -1,46 +1,24 @@
-### Bootstrap process
-#### Through Github
+##  Polarity detection for the Greek language
 
-Go to the recipe project in github and select:
-- Use this template > Create a new repository
+Implements two methods for computing polarity in Greek: 
+1. Affective lexicon based
+2. LLM based
 
-#### Through code
-1. Create a new repo in github named < REPO >
-2. clone recipe project to a directory named < REPO >
-3.  ```commandline 
-    git clone git@github.com:aiChatbotPOC/recipe-project.git <REPO>
-4. Change the origins of the repo and clear template history
-```commandline 
-   make change-origin NEW_URL='<new repo directory>'
-  ```
+### Affective Lexicon used:
 
-### Create the environment and install dependencies
+@inproceedings{palogiannidi2016affective,
+  title={Affective lexicon creation for the Greek language},
+  author={Palogiannidi, Elisavet and Koutsakis, Polychronis and Iosif, Elias and Potamianos, Alexandros},
+  booktitle={Proceedings of the Tenth International Conference on Language Resources and Evaluation (LREC'16)},
+  pages={2867--2872},
+  year={2016}
+}
+
+### Greek Dataset used for polarity detection
+https://www.kaggle.com/datasets/nikosfragkis/skroutz-shop-reviews-sentiment-analysis
+
+Exectute:
 ```commandline
-make environment
+python -m greek_polarity_detection
 ```
 
-### Update the following files with the project information
-1. recipe_project/about.py, tests/test_about.py
-2. describe the structure of the project in recipe_project/__init__.py
-3. Update main and recipe_project/brain.py file
-
-
-### Build the project
-```commandline
-make build
-```
-
-### Install the project as a dependency
-```commandline
-pipenv install /path/to/wheel/distribution
-```
-
-### Execute the project from cli [view the __ENTRY_POINTS__ in setup.py]
-```commandline
-recipe-package-project
-```
-
-### Import the project in python
-```commandline
-import recipe_package_project
-```

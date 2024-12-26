@@ -1,1 +1,2 @@
-changeme: 'Add your own configurations'
+dataset: 'Skroutz_dataset.xlsx'
+lexicon: 'anew_el'
