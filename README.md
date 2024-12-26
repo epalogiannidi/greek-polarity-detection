@@ -14,6 +14,9 @@ Implements two methods for computing polarity in Greek:
   year={2016}
 }
 
+The lexicon can be found under data folder or at the repository: https://github.com/epalogiannidi/Affect-of-words/tree/master/data/anew_el
+
+
 ### Greek Dataset used for polarity detection
 https://www.kaggle.com/datasets/nikosfragkis/skroutz-shop-reviews-sentiment-analysis
 

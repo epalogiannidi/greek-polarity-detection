@@ -5,6 +5,7 @@ import unicodedata
 from datetime import timedelta
 
 import fasttext
+import fasttext.util
 import nltk
 import numpy as np
 import pandas as pd

@@ -34,6 +34,7 @@ def llm_setup():
 
     return chainl
 
+
 def compute_score(words, d_instance, sim_mat_coefs, lexicon, min_v_score, max_v_score):
     v_scores = []
     for w in words:
@@ -118,6 +119,12 @@ def majority_vote(row):
     return row.mode()[0]  # Get the most frequent value in the row
 
 
+def accuracy(groundtruth, predicted):
+    sum(t == p for t, p in zip(list(groundtruth), list(predicted))) / len(
+        list(groundtruth)
+    )
+
+
 def execute():
 
     config = SetUpConfig().config_values
@@ -135,6 +142,7 @@ def execute():
     sim_mat_bias = np.hstack([np.ones((sim_mat.shape[0], 1)), sim_mat])
 
     sim_mat_coefs = torch.tensor(sim_mat_bias) * torch.tensor(lexicon.coefs["val"])
+    i = 1
     for fold in tqdm(dataset_instance.folds, position=0):
         fold["time"] = {}
         fold["train_data"]["val"] = fold["train_data"]["processed"].progress_apply(
@@ -193,73 +201,50 @@ def execute():
 
         # Keep the words only once, remove the most common words from the vocabulary
         fold["accuracy"] = {}
-        fold["accuracy"]["llm"] = sum(
-            t == p
-            for t, p in zip(
-                list(fold["test_labels"]), list(fold["test_data"]["llm_polarity"])
-            )
-        ) / len(list(fold["test_labels"]))
-        fold["accuracy"]["average"] = sum(
-            t == p
-            for t, p in zip(
-                list(fold["test_labels"]), list(fold["test_data"]["label_average"])
-            )
-        ) / len(list(fold["test_labels"]))
-        fold["accuracy"]["waverage"] = sum(
-            t == p
-            for t, p in zip(
-                list(fold["test_labels"]), list(fold["test_data"]["label_waverage"])
-            )
-        ) / len(list(fold["test_labels"]))
-        fold["accuracy"]["strong_negative"] = sum(
-            t == p
-            for t, p in zip(
-                list(fold["test_labels"]),
-                list(fold["test_data"]["label_strong_negative"]),
-            )
-        ) / len(list(fold["test_labels"]))
-        fold["accuracy"]["max_counts"] = sum(
-            t == p
-            for t, p in zip(
-                list(fold["test_labels"]), list(fold["test_data"]["label_max_counts"])
-            )
-        ) / len(list(fold["test_labels"]))
-        fold["accuracy"]["polarity_ratio"] = sum(
-            t == p
-            for t, p in zip(
-                list(fold["test_labels"]),
-                list(fold["test_data"]["label_polarity_ratio"]),
-            )
-        ) / len(list(fold["test_labels"]))
-        fold["accuracy"]["max"] = sum(
-            t == p
-            for t, p in zip(
-                list(fold["test_labels"]), list(fold["test_data"]["label_max"])
-            )
-        ) / len(list(fold["test_labels"]))
-        fold["accuracy"]["random"] = sum(
-            t == p
-            for t, p in zip(
-                list(fold["test_labels"]), list(fold["test_data"]["label_random"])
-            )
-        ) / len(list(fold["test_labels"]))
+        fold["accuracy"]["llm"] = accuracy(
+            fold["test_labels"], fold["test_data"]["llm_polarity"]
+        )
+        fold["accuracy"]["average"] = accuracy(
+            fold["test_labels"], fold["test_data"]["label_average"]
+        )
+        fold["accuracy"]["waverage"] = accuracy(
+            fold["test_labels"], fold["test_data"]["label_waverage"]
+        )
+        fold["accuracy"]["strong_negative"] = accuracy(
+            fold["test_labels"], fold["test_data"]["label_strong_negative"]
+        )
+        fold["accuracy"]["max_counts"] = accuracy(
+            fold["test_labels"], fold["test_data"]["label_max_counts"]
+        )
+        fold["accuracy"]["polarity_ratio"] = accuracy(
+            fold["test_labels"], fold["test_data"]["label_polarity_ratio"]
+        )
+        fold["accuracy"]["max"] = accuracy(
+            fold["test_labels"], fold["test_data"]["label_max"]
+        )
+        fold["accuracy"]["random"] = accuracy(
+            fold["test_labels"], fold["test_data"]["label_random"]
+        )
 
-        print("FIRST FOLD COMPLE")
+        logger.info(f"Fold Accuracies: \n {fold['accuracy']}")
+
         path = "results_comb"
         os.makedirs(path, exist_ok=True)
-        for i, f in enumerate(dataset_instance.folds):
-            os.makedirs(f"{path}/{i}", exist_ok=True)
-            f["test_data"].to_csv(f"{path}/{i}/test.csv")
-            f["test_labels"].to_csv(f"{path}/{i}/labels.csv")
 
-            with open(f"{path}/{i}/accuracies.txt", "w") as file:
-                for key, value in f["accuracy"].items():
-                    file.write(f"{key}: {value}\n")
-            with open(f"{path}/{i}/times.txt", "w") as file:
-                for key, value in f["time"].items():
-                    file.write(f"{key}: {value}\n")
+        os.makedirs(f"{path}/{i}", exist_ok=True)
+        fold["test_data"].to_csv(f"{path}/{i}/test.csv")
+        fold["test_labels"].to_csv(f"{path}/{i}/labels.csv")
 
-    # Compute accuracy
+        with open(f"{path}/{i}/accuracies.txt", "w") as file:
+            for key, value in fold["accuracy"].items():
+                file.write(f"{key}: {value}\n")
+        with open(f"{path}/{i}/times.txt", "w") as file:
+            for key, value in fold["time"].items():
+                file.write(f"{key}: {value}\n")
+
+        i += 1
+
+    # Compute mean accuracy
 
     acc_average = np.array(
         [f["accuracy"]["average"] for f in dataset_instance.folds]
@@ -282,9 +267,11 @@ def execute():
     ).mean()
     acc_llm = np.array([f["accuracy"]["llm"] for f in dataset_instance.folds]).mean()
 
-    logger.info(f"Cross Validation Accuracies: \n {acc_average=}\n{acc_max_counts=}\n{acc_polarity_ratio}\n{acc_random}\n{acc_waverage}\n{acc_strong_negative}\n{acc_llm}")
+    logger.info(
+        f"Cross Validation Accuracies: \n {acc_average=}\n{acc_max_counts=}\n{acc_polarity_ratio}\n{acc_random}\n{acc_waverage}\n{acc_strong_negative}\n{acc_llm}"
+    )
 
-    path = "results_comb"
+    path = "results_comb1"
     os.makedirs(path, exist_ok=True)
     for i, f in enumerate(dataset_instance.folds):
         os.makedirs(f"{path}/{i}", exist_ok=True)
